@@ -1,0 +1,2 @@
+# diy-nas-onescript
+这是一个适用于在debian系统上部署nas常用软件的脚本。它可以帮助用户快速安装想要的软件环境和docker应用。
