@@ -165,7 +165,7 @@ patch_os_release() {
     Show 0 "打补丁和临时修改os-release"
     # 打补丁
     # 安装深度deepin缺少的依赖包udevil
-    wget -O /tmp/mergerfs.deb https://cdn.jsdelivr.net/gh/wukongdaily/diy-nas-onescript@master/res/udevil.deb
+    wget -O /tmp/udevil.deb https://cdn.jsdelivr.net/gh/wukongdaily/diy-nas-onescript@master/res/udevil.deb
     sudo dpkg -i /tmp/udevil.deb
     # 安装深度deepin缺少的依赖包mergerfs
     wget -O /tmp/mergerfs.deb https://cdn.jsdelivr.net/gh/wukongdaily/diy-nas-onescript@master/res/mergerfs.deb
