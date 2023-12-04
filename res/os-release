@@ -1,0 +1,8 @@
+PRETTY_NAME="Deepin 23"
+NAME="Deepin"
+VERSION_ID="23"
+VERSION="23"
+ID=Deepin
+HOME_URL="https://www.deepin.org/"
+BUG_REPORT_URL="https://bbs.deepin.org"
+VERSION_CODENAME=beige
