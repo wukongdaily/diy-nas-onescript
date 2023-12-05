@@ -60,7 +60,7 @@ enable_ssh() {
     echo "启用SSH服务"
     sudo apt-get update
     apt list --upgradable
-    sudo apt-get install openssh-server
+    sudo apt-get install openssh-server -y
 }
 
 #安装常用办公必备软件(office、QQ、微信、远程桌面等)
