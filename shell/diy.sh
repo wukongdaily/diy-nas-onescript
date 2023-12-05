@@ -81,7 +81,10 @@ install_virtualbox_extpack() {
     wget https://download.virtualbox.org/virtualbox/7.0.12/Oracle_VM_VirtualBox_Extension_Pack-7.0.12.vbox-extpack
     echo "y" | sudo VBoxManage extpack install --replace Oracle_VM_VirtualBox_Extension_Pack-7.0.12.vbox-extpack
     sudo VBoxManage list extpacks
-    Show 0 "VM 扩展包安装完成"
+    sudo groupadd usbfs
+    sudo adduser $USER vboxusers
+    sudo adduser $USER usbfs
+    Show 0 "VM 扩展包安装完成,重启后才能生效。重启后USB才可以被虚拟机识别"
 }
 
 # 格式转换
@@ -171,7 +174,6 @@ patch_os_release() {
     wget -O /tmp/mergerfs.deb https://cdn.jsdelivr.net/gh/wukongdaily/diy-nas-onescript@master/res/mergerfs.deb
     sudo dpkg -i /tmp/mergerfs.deb
 
-    
     #伪装debian 12 修改系统名称和代号，待CasaOS安装成功后，还原回来
     sudo sed -i -e 's/^ID=.*$/ID=debian/' -e 's/^VERSION_CODENAME=.*$/VERSION_CODENAME=bookworm/' /etc/os-release
     Show 0 "妥啦! 深度Deepin系统下安装CasaOS的环境已经准备好 你可以安装CasaOS了."
