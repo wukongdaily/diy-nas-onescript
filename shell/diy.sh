@@ -79,6 +79,7 @@ install_virtualbox() {
 
 install_virtualbox_extpack() {
     wget https://download.virtualbox.org/virtualbox/7.0.12/Oracle_VM_VirtualBox_Extension_Pack-7.0.12.vbox-extpack
+    sudo chmod 777 Oracle_VM_VirtualBox_Extension_Pack-7.0.12.vbox-extpack
     echo "y" | sudo VBoxManage extpack install --replace Oracle_VM_VirtualBox_Extension_Pack-7.0.12.vbox-extpack
     sudo VBoxManage list extpacks
     sudo groupadd usbfs
