@@ -148,6 +148,7 @@ convert_vm_format() {
 
     # 检查命令是否成功执行
     if [ $? -eq 0 ]; then
+        sudo chmod 755 $target_path
         Show 0 "转换成功。转换后的文件位于：$target_path"
     else
         Show 1 "转换失败，请检查输入的路径和文件。"
