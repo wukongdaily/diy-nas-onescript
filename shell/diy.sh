@@ -224,11 +224,23 @@ EOF
     Show 0 "docker 国内镜像地址配置完毕!"
 }
 
+install_fcitx5_chewing() {
+    sudo apt-get install fcitx5-chewing -y
+    if [ $? -eq 0 ]; then
+        Show 0 "新酷音输入法(注音输入法) 安装成功"
+        Show 0 "请您在全部应用里找到Fxitx5配置,添加新酷音"
+    else
+        Show 1 "安装失败，请检查错误信息"
+    fi
+}
+
+
+
 declare -a menu_options
 declare -A commands
-
 menu_options=(
     "启用SSH服务"
+    "安装注音输入法(新酷音输入法)"
     "安装常用办公必备软件(office、QQ、微信、远程桌面等)"
     "安装虚拟机VirtualBox 7"
     "安装虚拟机VirtualBox 7扩展包"
@@ -253,7 +265,11 @@ commands=(
     ["卸载 CasaOS"]="uninstall_casaos"
     ["配置docker为国内镜像"]="configure_docker_mirror"
     ["安装常用办公必备软件(office、QQ、微信、远程桌面等)"]="install_need_apps"
+    ["安装注音输入法(新酷音输入法)"]="install_fcitx5_chewing"
+    
 )
+
+
 
 show_menu() {
     echo -e "${GREEN_LINE}"
