@@ -7,3 +7,6 @@
 ## ❤[使用方法 Wiki](https://github.com/wukongdaily/diy-nas-onescript/wiki)
 
 ## ‼️[提BUG](https://github.com/wukongdaily/diy-nas-onescript/issues)
+
+## 截图
+![zhuyin](https://github.com/wukongdaily/diy-nas-onescript/assets/143675923/77cfb181-2857-4501-ab10-6caf9ac587fd)
