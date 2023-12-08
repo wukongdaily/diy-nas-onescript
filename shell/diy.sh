@@ -91,6 +91,14 @@ install_virtualbox_extpack() {
 # 格式转换
 convert_vm_format() {
     echo "虚拟机一键格式转换(img2vdi)"
+    sudo apt-get update > /dev/null 2>&1
+    if ! command -v pv &>/dev/null; then
+        echo "pv is not installed. Installing pv..."
+        sudo apt-get install pv -y || true
+    else
+        echo -e
+    fi
+
     # 获取用户输入的文件路径
     read -p "请将待转换的文件拖拽到此处(img|img.zip|img.gz): " file_path
 
@@ -129,7 +137,7 @@ convert_vm_format() {
     elif [[ "$file_path" == *.img.gz ]]; then
         # 如果是 img.gz 文件，先解压
         Show 0 "正在解压 img.gz 文件..."
-        gunzip -k "$file_path"
+        pv "$file_path" | gunzip -c >"${file_path%.*}" || true
         img_file="${file_path%.*}"
 
         # 执行转换命令
@@ -234,8 +242,6 @@ install_fcitx5_chewing() {
     fi
 }
 
-
-
 declare -a menu_options
 declare -A commands
 menu_options=(
@@ -266,10 +272,8 @@ commands=(
     ["配置docker为国内镜像"]="configure_docker_mirror"
     ["安装常用办公必备软件(office、QQ、微信、远程桌面等)"]="install_need_apps"
     ["安装注音输入法(新酷音输入法)"]="install_fcitx5_chewing"
-    
+
 )
-
-
 
 show_menu() {
     echo -e "${GREEN_LINE}"
