@@ -10,6 +10,7 @@
 ## 适配系统
 ✅ Deepin v23beta2
 ## 相关项目
+https://bbs.deepin.org/post/209756<br>
 https://github.com/IceWhaleTech/CasaOS<br>
 https://github.com/orgs/linuxdeepin/projects/29/views/2<br>
 https://www.deepin.org/zh/deepin-v23-beta2-released/
