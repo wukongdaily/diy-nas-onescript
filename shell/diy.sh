@@ -56,12 +56,29 @@ InitBanner() {
     echo -e ""
 }
 
+# 函数：检查并启动 SSH
 enable_ssh() {
-    echo "启用SSH服务"
-    sudo apt-get update
-    apt list --upgradable
-    sudo apt-get install openssh-server -y
+    # 检查 openssh-server 是否安装
+    if dpkg -l | grep -q openssh-server; then
+        echo "openssh-server 已安装。"
+    else
+        echo "openssh-server 未安装，正在安装..."
+        sudo apt-get update
+        sudo apt-get install openssh-server -y
+    fi
+
+    # 启动 SSH 服务
+    sudo systemctl start ssh
+    echo "SSH 服务已启动。"
+
+    # 设置 SSH 服务开机自启
+    sudo systemctl enable ssh
+    echo "SSH 服务已设置为开机自启。"
+
+    # 显示 SSH 服务状态
+    sudo systemctl status ssh
 }
+
 
 #安装常用办公必备软件(office、QQ、微信、远程桌面等)
 install_need_apps() {
@@ -337,7 +354,7 @@ do_autostart_vm() {
 
     # 将虚拟机名称写入临时文件
     for VMNAME in "${VM_ARRAY[@]}"; do
-        echo "$VMNAME" >> "$TMP_VM_LIST"
+        echo "$VMNAME" >>"$TMP_VM_LIST"
     done
 
     # 使用 dialog 显示虚拟机列表，并将按钮标记为“确定”
@@ -349,14 +366,12 @@ do_autostart_vm() {
     # 删除临时文件
     rm "$TMP_VM_LIST"
 
-   
     # 去掉开机提示:解锁您的开机密钥环
     sudo rm -rf ~/.local/share/keyrings/*
-     # 显示/etc/rc.local的内容
+    # 显示/etc/rc.local的内容
     Show 0 "已将所有虚拟机设置为开机无头自启动。查看配置 /etc/rc.local,如下"
     cat /etc/rc.local
 }
-
 
 declare -a menu_options
 declare -A commands
