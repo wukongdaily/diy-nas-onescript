@@ -91,7 +91,7 @@ install_virtualbox_extpack() {
 # 格式转换
 convert_vm_format() {
     echo "虚拟机一键格式转换(img2vdi)"
-    sudo apt-get update > /dev/null 2>&1
+    sudo apt-get update >/dev/null 2>&1
     if ! command -v pv &>/dev/null; then
         echo "pv is not installed. Installing pv..."
         sudo apt-get install pv -y || true
@@ -242,6 +242,122 @@ install_fcitx5_chewing() {
     fi
 }
 
+# 设置开机自启动虚拟机virtualbox
+set_vm_autostart() {
+    # 定义红色文本
+    RED='\033[0;31m'
+    # 无颜色
+    NC='\033[0m'
+    GREEN='\033[0;32m'
+
+    # 显示带有红色文本的提示信息
+    echo -e
+    echo -e "设置虚拟机开机自启动,需要${GREEN}设置系统自动登录。${NC}\n${RED}这可能会带来安全风险。当然如果你后悔了,也可以在系统设置里取消自动登录。是否继续？${NC} [Y/n] "
+
+    # 读取用户的响应
+    read -r -n 1 response
+    echo # 新行
+
+    case $response in
+    [nN])
+        echo "操作已取消。"
+        exit 1
+        ;;
+    *)
+        # 设置自动登录 免GUI桌面登录
+        setautologin
+        do_autostart_vm
+        ;;
+    esac
+
+}
+
+#设置自动登录
+setautologin() {
+    # 使用whoami命令获取当前有效的用户名
+    USERNAME=$(whoami)
+
+    # 设置LightDM配置以启用自动登录
+    sudo sed -i '/^#autologin-user=/s/^#//' /etc/lightdm/lightdm.conf
+    sudo sed -i "s/^autologin-user=.*/autologin-user=$USERNAME/" /etc/lightdm/lightdm.conf
+    sudo sed -i "s/^#autologin-user-timeout=.*/autologin-user-timeout=0/" /etc/lightdm/lightdm.conf
+}
+
+# 设置开机5秒后
+# 自动启动所有虚拟机(无头启动)
+do_autostart_vm() {
+    # 检查系统上是否安装了VirtualBox
+    if ! command -v VBoxManage >/dev/null; then
+        Show 1 "未检测到VirtualBox。请先安装VirtualBox。"
+        return
+    fi
+
+    # 确定/etc/rc.local文件是否存在，如果不存在，则创建它
+    if [ ! -f /etc/rc.local ]; then
+        echo "#!/bin/sh -e" | sudo tee /etc/rc.local >/dev/null
+        sudo chmod +x /etc/rc.local
+    fi
+
+    # 获取当前用户名
+    USERNAME=$(whoami)
+
+    # 获取当前所有虚拟机的名称并转换为数组
+    VMS=$(VBoxManage list vms | cut -d ' ' -f 1 | sed 's/"//g')
+    VM_ARRAY=($VMS)
+
+    # 检查虚拟机数量
+    if [ ${#VM_ARRAY[@]} -eq 0 ]; then
+        Show 1 "没有检测到任何虚拟机,您应该先创建虚拟机"
+        return
+    fi
+
+    # 创建一个临时文件用于存储新的rc.local内容
+    TMP_RC_LOCAL=$(mktemp)
+
+    # 向临时文件添加初始行
+    echo "#!/bin/sh -e" >$TMP_RC_LOCAL
+    echo "sleep 5" >>$TMP_RC_LOCAL
+
+    # 为每个现存的虚拟机添加启动命令
+    for VMNAME in "${VM_ARRAY[@]}"; do
+        echo "su - $USERNAME -c \"VBoxHeadless -s $VMNAME &\"" >>$TMP_RC_LOCAL
+    done
+
+    # 添加exit 0到临时文件的末尾
+    echo "exit 0" >>$TMP_RC_LOCAL
+
+    # 用新的rc.local内容替换旧的rc.local文件
+    cat $TMP_RC_LOCAL | sudo tee /etc/rc.local >/dev/null
+
+    # 删除临时文件
+    rm $TMP_RC_LOCAL
+
+    # 创建一个临时文件用于存储虚拟机列表
+    TMP_VM_LIST=$(mktemp)
+
+    # 将虚拟机名称写入临时文件
+    for VMNAME in "${VM_ARRAY[@]}"; do
+        echo "$VMNAME" >> "$TMP_VM_LIST"
+    done
+
+    # 使用 dialog 显示虚拟机列表，并将按钮标记为“确定”
+    dialog --title "下列虚拟机均已设置为开机自启动" --ok-label "确定" --textbox "$TMP_VM_LIST" 10 50
+
+    # 清除对话框
+    clear
+
+    # 删除临时文件
+    rm "$TMP_VM_LIST"
+
+   
+    # 去掉开机提示:解锁您的开机密钥环
+    sudo rm -rf ~/.local/share/keyrings/*
+     # 显示/etc/rc.local的内容
+    Show 0 "已将所有虚拟机设置为开机无头自启动。查看配置 /etc/rc.local,如下"
+    cat /etc/rc.local
+}
+
+
 declare -a menu_options
 declare -A commands
 menu_options=(
@@ -250,6 +366,7 @@ menu_options=(
     "安装常用办公必备软件(office、QQ、微信、远程桌面等)"
     "安装虚拟机VirtualBox 7"
     "安装虚拟机VirtualBox 7扩展包"
+    "设置虚拟机开机无头自启动"
     "卸载虚拟机"
     "虚拟机一键格式转换(img2vdi)"
     "准备CasaOS的使用环境"
@@ -264,6 +381,7 @@ commands=(
     ["安装虚拟机VirtualBox 7"]="install_virtualbox"
     ["安装虚拟机VirtualBox 7扩展包"]="install_virtualbox_extpack"
     ["虚拟机一键格式转换(img2vdi)"]="convert_vm_format"
+    ["设置虚拟机开机无头自启动"]="set_vm_autostart"
     ["卸载虚拟机"]="uninstall_vm"
     ["准备CasaOS的使用环境"]="patch_os_release"
     ["安装CasaOS(包含Docker)"]="install_casaos"
@@ -276,18 +394,26 @@ commands=(
 )
 
 show_menu() {
+    YELLOW="\e[33m"
+    NO_COLOR="\e[0m"
+
     echo -e "${GREEN_LINE}"
     echo '
-    ***********  DIY NAS 工具箱v1.0  ***************
+    ***********  DIY NAS 工具箱v1.1  ***************
     使用环境:基于debian 12的深度deepin系统(内核版本6.1)
     脚本作用:快速部署一个办公场景下的Diy NAS
     
             --- Made by wukong with YOU ---
-'
+    '
     echo -e "${GREEN_LINE}"
     echo "请选择操作："
+
     for i in "${!menu_options[@]}"; do
-        echo "$((i + 1)). ${menu_options[i]}"
+        if [[ "${menu_options[i]}" == "设置虚拟机开机无头自启动" ]]; then
+            echo -e "$((i + 1)). ${YELLOW}${menu_options[i]}${NO_COLOR}"
+        else
+            echo "$((i + 1)). ${menu_options[i]}"
+        fi
     done
 }
 
