@@ -8,7 +8,7 @@
 
 ## ‼️[提BUG](https://github.com/wukongdaily/diy-nas-onescript/issues)
 ## 适配系统
-✅ Deepin v23beta2
+✅ Deepin v23beta2<br>
 ✅ Deepin v20.9
 ## 相关项目
 https://bbs.deepin.org/post/209756<br>
