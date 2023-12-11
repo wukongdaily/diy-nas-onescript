@@ -79,12 +79,12 @@ enable_ssh() {
     sudo systemctl status ssh
 }
 
-
 #安装常用办公必备软件(office、QQ、微信、远程桌面等)
 install_need_apps() {
+    sudo apt-get upgrade -y
     sudo apt-get update
-    sudo apt-get install btop neofetch -y
     sudo apt-get install cn.wps.wps-office com.qq.weixin.deepin com.gitee.rustdesk com.qq.im.deepin com.mozilla.firefox-zh -y
+    sudo apt-get install neofetch -y
 }
 
 # 下载虚拟机安装包run，并保存为virtualbox7.run
@@ -369,10 +369,54 @@ do_autostart_vm() {
     # 删除临时文件
     rm "$TMP_VM_LIST"
 
-
     # 显示/etc/rc.local的内容
     Show 0 "已将所有虚拟机设置为开机无头自启动。查看配置 /etc/rc.local,如下"
     cat /etc/rc.local
+}
+
+# 安装btop
+enable_btop() {
+    # 尝试使用 apt 安装 btop
+    if sudo apt-get update >/dev/null 2>&1 && sudo apt-get install -y btop 2>/dev/null; then
+        echo "btop successfully installed using apt."
+        return 0
+    else
+        echo "Failed to install btop using apt, trying snap..."
+
+        # 检查 snap 是否已安装
+        if ! command -v snap >/dev/null; then
+            echo "Snap is not installed. Installing snapd..."
+            if ! sudo apt-get install -y snapd; then
+                echo "Failed to install snapd."
+                return 1
+            fi
+            echo "Snapd installed successfully."
+        else
+            echo "Snap is already installed."
+        fi
+
+        # 使用 snap 安装 btop
+        if sudo snap install btop; then
+            echo "btop successfully installed using snap."
+            # 定义要添加的路径
+            path_to_add="/snap/bin"
+            # 检查 ~/.bashrc 中是否已存在该路径
+            if ! grep -q "export PATH=\$PATH:$path_to_add" ~/.bashrc; then
+                # 如果不存在，将其添加到 ~/.bashrc 文件的末尾
+                echo "export PATH=\$PATH:$path_to_add" >>~/.bashrc
+                echo "Path $path_to_add added to ~/.bashrc"
+            else
+                echo "Path $path_to_add already in ~/.bashrc"
+            fi
+            # 重新加载 ~/.bashrc
+            source ~/.bashrc
+            Show 0 "btop已经安装,你可以使用btop命令了"
+            return 0
+        else
+            echo "Failed to install btop using snap."
+            return 1
+        fi
+    fi
 }
 
 declare -a menu_options
@@ -391,6 +435,7 @@ menu_options=(
     "还原配置文件os-release"
     "卸载 CasaOS"
     "配置docker为国内镜像"
+    "安装btop资源监控工具"
 )
 
 commands=(
@@ -407,6 +452,7 @@ commands=(
     ["配置docker为国内镜像"]="configure_docker_mirror"
     ["安装常用办公必备软件(office、QQ、微信、远程桌面等)"]="install_need_apps"
     ["安装注音输入法(新酷音输入法)"]="install_fcitx5_chewing"
+    ["安装btop资源监控工具"]="enable_btop"
 
 )
 
