@@ -463,7 +463,7 @@ show_menu() {
     echo -e "${GREEN_LINE}"
     echo '
     ***********  DIY NAS 工具箱v1.1  ***************
-    使用环境:基于debian 12的深度deepin系统(内核版本6.1)
+    适配系统:deepin 20.9/v23 beta2(基于debian)
     脚本作用:快速部署一个办公场景下的Diy NAS
     
             --- Made by wukong with YOU ---
