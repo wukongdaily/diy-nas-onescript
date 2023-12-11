@@ -281,8 +281,6 @@ set_vm_autostart() {
         exit 1
         ;;
     *)
-        # 设置自动登录 免GUI桌面登录
-        setautologin
         do_autostart_vm
         ;;
     esac
@@ -298,6 +296,8 @@ setautologin() {
     sudo sed -i '/^#autologin-user=/s/^#//' /etc/lightdm/lightdm.conf
     sudo sed -i "s/^autologin-user=.*/autologin-user=$USERNAME/" /etc/lightdm/lightdm.conf
     sudo sed -i "s/^#autologin-user-timeout=.*/autologin-user-timeout=0/" /etc/lightdm/lightdm.conf
+    # 去掉开机提示:解锁您的开机密钥环
+    sudo rm -rf ~/.local/share/keyrings/*
 }
 
 # 设置开机5秒后
@@ -327,6 +327,9 @@ do_autostart_vm() {
         Show 1 "没有检测到任何虚拟机,您应该先创建虚拟机"
         return
     fi
+
+    # 设置自动登录 免GUI桌面登录
+    setautologin
 
     # 创建一个临时文件用于存储新的rc.local内容
     TMP_RC_LOCAL=$(mktemp)
@@ -366,8 +369,7 @@ do_autostart_vm() {
     # 删除临时文件
     rm "$TMP_VM_LIST"
 
-    # 去掉开机提示:解锁您的开机密钥环
-    sudo rm -rf ~/.local/share/keyrings/*
+
     # 显示/etc/rc.local的内容
     Show 0 "已将所有虚拟机设置为开机无头自启动。查看配置 /etc/rc.local,如下"
     cat /etc/rc.local
