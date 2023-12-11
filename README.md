@@ -17,5 +17,8 @@ https://github.com/orgs/linuxdeepin/projects/29/views/2<br>
 https://www.deepin.org/zh/deepin-v23-beta2-released/
 
 ## 截图
-![123](https://github.com/wukongdaily/diy-nas-onescript/assets/143675923/d14ff983-d19d-45e9-ad67-fb08f034b276)
+
+
+
+![FinalShell 4 3 0 6 2023-12-11 09-39-21](https://github.com/wukongdaily/diy-nas-onescript/assets/143675923/be5bc400-9f0b-4062-a60f-4551512b63d8)
 
