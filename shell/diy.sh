@@ -56,6 +56,12 @@ InitBanner() {
     echo -e ""
 }
 
+# 定义红色文本
+RED='\033[0;31m'
+# 无颜色
+NC='\033[0m'
+GREEN='\033[0;32m'
+
 # 函数：检查并启动 SSH
 enable_ssh() {
     # 检查 openssh-server 是否安装
@@ -261,11 +267,6 @@ install_fcitx5_chewing() {
 
 # 设置开机自启动虚拟机virtualbox
 set_vm_autostart() {
-    # 定义红色文本
-    RED='\033[0;31m'
-    # 无颜色
-    NC='\033[0m'
-    GREEN='\033[0;32m'
 
     # 显示带有红色文本的提示信息
     echo -e
@@ -427,8 +428,7 @@ menu_options=(
     "安装常用办公必备软件(office、QQ、微信、远程桌面等)"
     "安装虚拟机VirtualBox 7"
     "安装虚拟机VirtualBox 7扩展包"
-    "设置虚拟机开机无头自启动"
-    "卸载虚拟机"
+    "设置虚拟机开机自启动(headless)"
     "虚拟机一键格式转换(img2vdi)"
     "准备CasaOS的使用环境"
     "安装CasaOS(包含Docker)"
@@ -436,6 +436,7 @@ menu_options=(
     "卸载 CasaOS"
     "配置docker为国内镜像"
     "安装btop资源监控工具"
+    "卸载虚拟机"
 )
 
 commands=(
@@ -443,7 +444,7 @@ commands=(
     ["安装虚拟机VirtualBox 7"]="install_virtualbox"
     ["安装虚拟机VirtualBox 7扩展包"]="install_virtualbox_extpack"
     ["虚拟机一键格式转换(img2vdi)"]="convert_vm_format"
-    ["设置虚拟机开机无头自启动"]="set_vm_autostart"
+    ["设置虚拟机开机自启动(headless)"]="set_vm_autostart"
     ["卸载虚拟机"]="uninstall_vm"
     ["准备CasaOS的使用环境"]="patch_os_release"
     ["安装CasaOS(包含Docker)"]="install_casaos"
@@ -453,7 +454,6 @@ commands=(
     ["安装常用办公必备软件(office、QQ、微信、远程桌面等)"]="install_need_apps"
     ["安装注音输入法(新酷音输入法)"]="install_fcitx5_chewing"
     ["安装btop资源监控工具"]="enable_btop"
-
 )
 
 show_menu() {
@@ -482,6 +482,11 @@ show_menu() {
 
 handle_choice() {
     local choice=$1
+    # 检查输入是否为空
+    if [[ -z $choice ]]; then
+        echo -e "${RED}输入不能为空，请重新选择。${NC}"
+        return
+    fi
 
     if [ -z "${menu_options[$choice - 1]}" ] || [ -z "${commands[${menu_options[$choice - 1]}]}" ]; then
         echo "无效选项，请重新选择。"
@@ -491,12 +496,14 @@ handle_choice() {
     "${commands[${menu_options[$choice - 1]}]}"
 }
 
-# 主逻辑
 while true; do
+    clear 
     show_menu
     read -p "请输入选项的序号(输入q退出): " choice
     if [[ $choice == 'q' ]]; then
         break
     fi
     handle_choice $choice
+    echo "按任意键继续..."
+    read -n 1 # 等待用户按键
 done
