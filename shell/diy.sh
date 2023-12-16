@@ -194,27 +194,47 @@ uninstall_vm() {
 }
 
 #  为了深度系统顺利安装CasaOS 打补丁和临时修改os-release
-patch_os_release() {
+prepare_for_casaos() {
     # 备份一下原始文件
     sudo cp /etc/os-release /etc/os-release.backup
-    Show 0 "准备CasaOS的使用环境..."
-    Show 0 "打补丁和临时修改os-release"
-    # 打补丁
-    # 安装深度deepin缺少的依赖包udevil
-    wget -O /tmp/udevil.deb https://cdn.jsdelivr.net/gh/wukongdaily/diy-nas-onescript@master/res/udevil.deb
-    sudo dpkg -i /tmp/udevil.deb
-    # 安装深度deepin缺少的依赖包mergerfs
-    wget -O /tmp/mergerfs.deb https://cdn.jsdelivr.net/gh/wukongdaily/diy-nas-onescript@master/res/mergerfs.deb
-    sudo dpkg -i /tmp/mergerfs.deb
+    # 显示带有红色文本的提示信息
+    echo -e
+    echo -e "安装CasaOS过程会自动安装docker,为了避免docker版本冲突,\n需要${GREEN}卸载本机安装过的docker,${NC}${RED}确定要卸载docker吗。是否继续?${NC} [Y/n] "
+    read -r -n 1 response
+    echo
+    case $response in
+    [nN])
+        echo "操作已取消。"
+        ;;
+    *)
+        uninstall_docker
+        Show 0 "准备CasaOS的使用环境..."
+        Show 0 "打补丁和临时修改os-release"
+        # 打补丁
+        # 安装深度deepin缺少的依赖包udevil
+        wget -O /tmp/udevil.deb https://cdn.jsdelivr.net/gh/wukongdaily/diy-nas-onescript@master/res/udevil.deb
+        sudo dpkg -i /tmp/udevil.deb
+        # 安装深度deepin缺少的依赖包mergerfs
+        wget -O /tmp/mergerfs.deb https://cdn.jsdelivr.net/gh/wukongdaily/diy-nas-onescript@master/res/mergerfs.deb
+        sudo dpkg -i /tmp/mergerfs.deb
 
-    #伪装debian 12 修改系统名称和代号，待CasaOS安装成功后，还原回来
-    sudo sed -i -e 's/^ID=.*$/ID=debian/' -e 's/^VERSION_CODENAME=.*$/VERSION_CODENAME=bookworm/' /etc/os-release
-    Show 0 "妥啦! 深度Deepin系统下安装CasaOS的环境已经准备好 你可以安装CasaOS了."
+        #伪装debian 12 修改系统名称和代号，待CasaOS安装成功后，还原回来
+        sudo sed -i -e 's/^ID=.*$/ID=debian/' -e 's/^VERSION_CODENAME=.*$/VERSION_CODENAME=bookworm/' /etc/os-release
+        Show 0 "妥啦! 深度Deepin系统下安装CasaOS的环境已经准备好 你可以安装CasaOS了."
+        ;;
+    esac
+}
+
+#卸载docker
+uninstall_docker() {
+    sudo dpkg --configure -a
+    sudo apt-get purge docker-ce docker-ce-cli containerd.io
+    sudo apt autoremove
 }
 
 # 安装CasaOS—Docker
 install_casaos() {
-    patch_os_release
+    prepare_for_casaos
     echo "安装CasaOS"
     curl -fsSL https://get.casaos.io | sudo bash
     Show 0 "CasaOS 已安装,正在还原配置文件"
@@ -446,7 +466,7 @@ commands=(
     ["虚拟机一键格式转换(img2vdi)"]="convert_vm_format"
     ["设置虚拟机开机自启动(headless)"]="set_vm_autostart"
     ["卸载虚拟机"]="uninstall_vm"
-    ["准备CasaOS的使用环境"]="patch_os_release"
+    ["准备CasaOS的使用环境"]="prepare_for_casaos"
     ["安装CasaOS(包含Docker)"]="install_casaos"
     ["还原配置文件os-release"]="restore_os_release"
     ["卸载 CasaOS"]="uninstall_casaos"
@@ -457,6 +477,7 @@ commands=(
 )
 
 show_menu() {
+    clear
     YELLOW="\e[33m"
     NO_COLOR="\e[0m"
 
@@ -497,7 +518,6 @@ handle_choice() {
 }
 
 while true; do
-    clear 
     show_menu
     read -p "请输入选项的序号(输入q退出): " choice
     if [[ $choice == 'q' ]]; then
