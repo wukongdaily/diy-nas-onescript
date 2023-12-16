@@ -9,11 +9,29 @@ readonly UNAME_U
 # COLORS
 readonly COLOUR_RESET='\e[0m'
 readonly aCOLOUR=(
-    '\e[38;5;154m' # green  	| Lines, bullets and separators
-    '\e[1m'        # Bold white	| Main descriptions
-    '\e[90m'       # Grey		| Credits
-    '\e[91m'       # Red		| Update notifications Alert
-    '\e[33m'       # Yellow		| Emphasis
+    '\e[38;5;154m' # 绿色 - 用于行、项目符号和分隔符 0
+    '\e[1m'        # 粗体白色 - 用于主要描述
+    '\e[90m'       # 灰色 - 用于版权信息
+    '\e[91m'       # 红色 - 用于更新通知警告
+    '\e[33m'       # 黄色 - 用于强调
+    '\e[34m'       # 蓝色
+    '\e[35m'       # 品红
+    '\e[36m'       # 青色
+    '\e[37m'       # 浅灰色
+    '\e[92m'       # 浅绿色9
+    '\e[93m'       # 浅黄色
+    '\e[94m'       # 浅蓝色
+    '\e[95m'       # 浅品红
+    '\e[96m'       # 浅青色
+    '\e[97m'       # 白色
+    '\e[40m'       # 背景黑色
+    '\e[41m'       # 背景红色
+    '\e[42m'       # 背景绿色
+    '\e[43m'       # 背景黄色
+    '\e[44m'       # 背景蓝色19
+    '\e[45m'       # 背景品红
+    '\e[46m'       # 背景青色21
+    '\e[47m'       # 背景浅灰色
 )
 
 readonly GREEN_LINE=" ${aCOLOUR[0]}─────────────────────────────────────────────────────$COLOUR_RESET"
@@ -61,6 +79,51 @@ RED='\033[0;31m'
 # 无颜色
 NC='\033[0m'
 GREEN='\033[0;32m'
+YELLOW="\e[33m"
+
+declare -a menu_options
+declare -A commands
+menu_options=(
+    "启用SSH服务"
+    "安装注音输入法(新酷音输入法)"
+    "安装常用办公必备软件(office、QQ、微信、远程桌面等)"
+    "安装虚拟机VirtualBox 7"
+    "安装虚拟机VirtualBox 7扩展包"
+    "虚拟机一键格式转换(img2vdi)"
+    "设置虚拟机开机自启动(headless)"
+    "VirtualBox硬盘直通"
+    "创建root身份的VirtualBox图标"
+    "刷新虚拟硬盘的UUID"
+    "准备CasaOS的使用环境"
+    "安装CasaOS(包含Docker)"
+    "还原配置文件os-release"
+    "配置docker为国内镜像"
+    "安装btop资源监控工具"
+    "卸载虚拟机"
+    "卸载 CasaOS"
+)
+
+commands=(
+    ["启用SSH服务"]="enable_ssh"
+    ["安装虚拟机VirtualBox 7"]="install_virtualbox"
+    ["安装虚拟机VirtualBox 7扩展包"]="install_virtualbox_extpack"
+    ["虚拟机一键格式转换(img2vdi)"]="convert_vm_format"
+    ["设置虚拟机开机自启动(headless)"]="set_vm_autostart"
+    ["卸载虚拟机"]="uninstall_vm"
+    ["准备CasaOS的使用环境"]="prepare_for_casaos"
+    ["安装CasaOS(包含Docker)"]="install_casaos"
+    ["还原配置文件os-release"]="restore_os_release"
+    ["卸载 CasaOS"]="uninstall_casaos"
+    ["配置docker为国内镜像"]="configure_docker_mirror"
+    ["安装常用办公必备软件(office、QQ、微信、远程桌面等)"]="install_need_apps"
+    ["安装注音输入法(新酷音输入法)"]="install_fcitx5_chewing"
+    ["安装btop资源监控工具"]="enable_btop"
+    ["VirtualBox硬盘直通"]="attach_raw_disk_to_vm"
+    ["创建root身份的VirtualBox图标"]="create_root_vm_desktop"
+    ["刷新虚拟硬盘的UUID"]="refresh_vm_disk_uuid"
+    
+
+)
 
 # 函数：检查并启动 SSH
 enable_ssh() {
@@ -321,8 +384,7 @@ setautologin() {
     sudo rm -rf ~/.local/share/keyrings/*
 }
 
-# 设置开机5秒后
-# 自动启动所有虚拟机(无头启动)
+# 设置虚拟机自启动
 do_autostart_vm() {
     # 检查系统上是否安装了VirtualBox
     if ! command -v VBoxManage >/dev/null; then
@@ -339,9 +401,16 @@ do_autostart_vm() {
     # 获取当前用户名
     USERNAME=$(whoami)
 
-    # 获取当前所有虚拟机的名称并转换为数组
-    VMS=$(VBoxManage list vms | cut -d ' ' -f 1 | sed 's/"//g')
-    VM_ARRAY=($VMS)
+    # 获取当前用户创建的虚拟机列表
+    USER_VMS=$(VBoxManage list vms | cut -d ' ' -f 1 | sed 's/"//g')
+    USER_VM_ARRAY=($USER_VMS)
+
+    # 获取root用户创建的虚拟机列表
+    ROOT_VMS=$(sudo VBoxManage list vms | cut -d ' ' -f 1 | sed 's/"//g')
+    ROOT_VM_ARRAY=($ROOT_VMS)
+
+    # 合并两个虚拟机数组
+    VM_ARRAY=(${USER_VM_ARRAY[@]} ${ROOT_VM_ARRAY[@]})
 
     # 检查虚拟机数量
     if [ ${#VM_ARRAY[@]} -eq 0 ]; then
@@ -359,9 +428,14 @@ do_autostart_vm() {
     echo "#!/bin/sh -e" >$TMP_RC_LOCAL
     echo "sleep 5" >>$TMP_RC_LOCAL
 
-    # 为每个现存的虚拟机添加启动命令
-    for VMNAME in "${VM_ARRAY[@]}"; do
+    # 为每个普通用户创建的虚拟机添加启动命令
+    for VMNAME in "${USER_VM_ARRAY[@]}"; do
         echo "su - $USERNAME -c \"VBoxHeadless -s $VMNAME &\"" >>$TMP_RC_LOCAL
+    done
+
+    # 为每个root用户创建的虚拟机添加启动命令
+    for VMNAME in "${ROOT_VM_ARRAY[@]}"; do
+        echo "sudo VBoxHeadless -s $VMNAME &" >>$TMP_RC_LOCAL
     done
 
     # 添加exit 0到临时文件的末尾
@@ -391,9 +465,11 @@ do_autostart_vm() {
     rm "$TMP_VM_LIST"
 
     # 显示/etc/rc.local的内容
-    Show 0 "已将所有虚拟机设置为开机无头自启动。查看配置 /etc/rc.local,如下"
+    Show 0 "已将所有虚拟机设置为开机后台自启动。查看配置 /etc/rc.local,如下"
     cat /etc/rc.local
 }
+
+
 
 # 安装btop
 enable_btop() {
@@ -440,41 +516,134 @@ enable_btop() {
     fi
 }
 
-declare -a menu_options
-declare -A commands
-menu_options=(
-    "启用SSH服务"
-    "安装注音输入法(新酷音输入法)"
-    "安装常用办公必备软件(office、QQ、微信、远程桌面等)"
-    "安装虚拟机VirtualBox 7"
-    "安装虚拟机VirtualBox 7扩展包"
-    "设置虚拟机开机自启动(headless)"
-    "虚拟机一键格式转换(img2vdi)"
-    "准备CasaOS的使用环境"
-    "安装CasaOS(包含Docker)"
-    "还原配置文件os-release"
-    "卸载 CasaOS"
-    "配置docker为国内镜像"
-    "安装btop资源监控工具"
-    "卸载虚拟机"
-)
+# 检查zenity是否安装
+check_zenity_installed() {
+    # 检查 zenity 是否已经安装
+    if ! command -v zenity >/dev/null 2>&1; then
+        echo "Zenity is not installed. Installing Zenity..."
+        sudo apt-get update >/dev/null 2>&1
+        sudo apt-get install zenity -y >/dev/null 2>&1
+        # 再次检查是否成功安装
+        if command -v zenity >/dev/null 2>&1; then
+            echo "Zenity installed successfully."
+        else
+            echo "Failed to install Zenity."
+            return 1
+        fi
+    else
+        echo -e
+        #echo "Zenity is already installed."
+    fi
+}
 
-commands=(
-    ["启用SSH服务"]="enable_ssh"
-    ["安装虚拟机VirtualBox 7"]="install_virtualbox"
-    ["安装虚拟机VirtualBox 7扩展包"]="install_virtualbox_extpack"
-    ["虚拟机一键格式转换(img2vdi)"]="convert_vm_format"
-    ["设置虚拟机开机自启动(headless)"]="set_vm_autostart"
-    ["卸载虚拟机"]="uninstall_vm"
-    ["准备CasaOS的使用环境"]="prepare_for_casaos"
-    ["安装CasaOS(包含Docker)"]="install_casaos"
-    ["还原配置文件os-release"]="restore_os_release"
-    ["卸载 CasaOS"]="uninstall_casaos"
-    ["配置docker为国内镜像"]="configure_docker_mirror"
-    ["安装常用办公必备软件(office、QQ、微信、远程桌面等)"]="install_need_apps"
-    ["安装注音输入法(新酷音输入法)"]="install_fcitx5_chewing"
-    ["安装btop资源监控工具"]="enable_btop"
-)
+
+#硬盘直通(需root身份启动vm)
+attach_raw_disk_to_vm() {
+    # 直通的硬盘,只能用于root身份启动的virtualbox
+    check_zenity_installed
+
+    Show 3 "注意:直通的硬盘,只能用于${YELLOW}root身份启动的${NC}virtualbox,\n请选择物理硬盘索引vmdk文件保存的位置(敲回车去选择位置)${NC} [Y/n] "
+    read -r -n 1 response
+    echo
+    case $response in
+    [nN])
+        echo "操作已取消。"
+        exit 1
+        ;;
+    *)
+        vmdk_path=$(zenity --file-selection --save --confirm-overwrite --file-filter="VMDK files (vmdk) | *.vmdk" --title="Select a Path for VMDK File" 2>/dev/null)
+        echo "硬盘索引保存在: $vmdk_path"
+        ;;
+    esac
+
+    # 获取硬盘及其大小
+    DISKS=$(lsblk -nrdo NAME,TYPE,SIZE | awk '$2=="disk" {print "/dev/"$1 " " $3}')
+
+    # 将硬盘信息转换为 dialog 可接受的格式
+    OPTIONS=()
+    for DISK in $DISKS; do
+        # 分割字符串以获取设备名和大小
+        IFS=' ' read -r NAME SIZE <<<"$DISK"
+        OPTIONS+=("${NAME}   ${SIZE}")
+    done
+
+    # 使用 dialog 显示菜单
+    device=$(dialog --clear \
+        --backtitle "VirtualBox硬盘直通(软直通)" \
+        --title "硬盘列表" \
+        --menu "请选择一个需要直通的硬盘：" 15 50 4 \
+        "${OPTIONS[@]}" \
+        2>&1 >/dev/tty)
+
+    # 清除对话框
+    clear
+    # 输出用户选择
+    echo "直通的硬盘是: ${device} 其中索引vmdk文件将创建在:${vmdk_path}"
+    sudo VBoxManage internalcommands createrawvmdk -filename "$vmdk_path" -rawdisk $device
+
+    # 检查命令执行的退出状态码
+    if [ $? -eq 0 ]; then
+        # 检查文件是否存在
+        if [ -f "$vmdk_path" ]; then
+            Show 0 "恭喜您！直通的索引 VMDK 文件已成功创建在: $vmdk_path"
+            sudo chmod 777 $vmdk_path
+            Show 3 "请您以root身份启动虚拟机,添加直通的硬盘索引vmdk文件即可"
+            Show 3 "添加之前,请检查${device} 是否处于挂载状态。若处于挂载状态,请在磁盘管理中卸载"
+        else
+            echo "VMDK 文件不存在。可能是由于权限问题或路径错误。"
+        fi
+    else
+        echo "命令执行失败。"
+    fi
+
+}
+
+# 创建一个以root身份运行的Virtualbox7 图标
+create_root_vm_desktop() {
+    # 指定 .desktop 文件的路径
+    local desktop_file="$HOME/Desktop/VirtualBoxRoot.desktop"
+    # 创建 .desktop 文件并写入内容
+    cat >"$desktop_file" <<EOF
+[Desktop Entry]
+Type=Application
+Exec=sh -c 'pkexec env DISPLAY=\$DISPLAY XAUTHORITY=\$XAUTHORITY VirtualBox'
+Name=VirtualBox (Root)
+Icon=virtualbox
+Terminal=false
+EOF
+
+    chmod +x "$desktop_file"
+    Show 0 "以root身份运行的Virtualbox7 图标已创建,在桌面上直接双击就可以用啦！"
+}
+
+# 刷新虚拟硬盘的UUID
+# 在 VirtualBox 中，每个虚拟磁盘（VDI、VMDK 等）都有一个唯一的 UUID，有时需要重新生成这个 UUID，特别是在复制或移动虚拟磁盘文件时。
+refresh_vm_disk_uuid() {
+    check_zenity_installed
+    # 让用户选择虚拟磁盘文件
+    local disk_path=$(zenity --file-selection --title="Select a Virtual Disk File" --file-filter="*.vmdk *.vdi" 2>/dev/null)
+
+    # 检查用户是否选择了文件
+    if [ -z "$disk_path" ]; then
+        zenity --error --text="No file selected. Operation cancelled." --width=400 --height=200 2>/dev/null
+        return 1
+    fi
+
+    # 检查磁盘文件是否存在
+    if [ ! -f "$disk_path" ]; then
+        zenity --error --text="Disk file not found: $disk_path" --width=400 --height=200 2>/dev/null
+        return 1
+    fi
+
+    # 使用 VBoxManage 命令刷新 UUID
+    if  VBoxManage internalcommands sethduuid "$disk_path" >/dev/null 2>&1; then
+        zenity --info --text="恭喜你!虚拟硬盘UUID刷新成功了\n文件位于:$disk_path" --width=400 --height=200 2>/dev/null
+    else
+        zenity --error --text="Failed to refresh UUID for disk: $disk_path" --width=400 --height=200 2>/dev/null
+    fi
+}
+
+
 
 show_menu() {
     clear
@@ -493,8 +662,10 @@ show_menu() {
     echo "请选择操作："
 
     for i in "${!menu_options[@]}"; do
-        if [[ "${menu_options[i]}" == "设置虚拟机开机无头自启动" ]]; then
+        if [[ "${menu_options[i]}" == "设置虚拟机开机自启动(headless)" ]]; then
             echo -e "$((i + 1)). ${YELLOW}${menu_options[i]}${NO_COLOR}"
+        elif [[ "${menu_options[i]}" == "VirtualBox硬盘直通" ]]; then
+            echo -e "$((i + 1)). ${aCOLOUR[0]}${menu_options[i]}${NO_COLOR}"
         else
             echo "$((i + 1)). ${menu_options[i]}"
         fi
@@ -509,8 +680,22 @@ handle_choice() {
         return
     fi
 
-    if [ -z "${menu_options[$choice - 1]}" ] || [ -z "${commands[${menu_options[$choice - 1]}]}" ]; then
-        echo "无效选项，请重新选择。"
+    # 检查输入是否为数字
+    if ! [[ $choice =~ ^[0-9]+$ ]]; then
+        echo -e "${RED}请输入有效数字!${NC}"
+        return
+    fi
+
+    # 检查数字是否在有效范围内
+    if [[ $choice -lt 1 ]] || [[ $choice -gt ${#menu_options[@]} ]]; then
+        echo -e "${RED}选项超出范围!${NC}"
+        echo -e "${YELLOW}请输入 1 到 ${#menu_options[@]} 之间的数字。${NC}"
+        return
+    fi
+
+    # 执行命令
+    if [ -z "${commands[${menu_options[$choice - 1]}]}" ]; then
+        echo -e "${RED}无效选项，请重新选择。${NC}"
         return
     fi
 
