@@ -121,7 +121,6 @@ commands=(
     ["VirtualBox硬盘直通"]="attach_raw_disk_to_vm"
     ["创建root身份的VirtualBox图标"]="create_root_vm_desktop"
     ["刷新虚拟硬盘的UUID"]="refresh_vm_disk_uuid"
-    
 
 )
 
@@ -401,7 +400,7 @@ do_autostart_vm() {
     # 获取当前用户名
     USERNAME=$(whoami)
 
-    # 获取当前用户创建的虚拟机列表
+    # 获取普通用户创建的虚拟机列表
     USER_VMS=$(VBoxManage list vms | cut -d ' ' -f 1 | sed 's/"//g')
     USER_VM_ARRAY=($USER_VMS)
 
@@ -418,8 +417,23 @@ do_autostart_vm() {
         return
     fi
 
-    # 设置自动登录 免GUI桌面登录
-    setautologin
+    # 创建一个临时文件用于存储虚拟机列表
+    TMP_VM_LIST=$(mktemp)
+
+    # 生成dialog checklist所需的格式
+    for VMNAME in "${VM_ARRAY[@]}"; do
+        if [[ " ${USER_VM_ARRAY[@]} " =~ " ${VMNAME} " ]]; then
+            echo "$VMNAME byUser off" >>"$TMP_VM_LIST"
+        else
+            echo "$VMNAME byRoot off" >>"$TMP_VM_LIST"
+        fi
+    done
+
+    # 使用dialog让用户选择要自启动的虚拟机
+    SELECTED_VMS=$(dialog --checklist "按空格键选择要自启动的虚拟机：" 20 50 10 --file "$TMP_VM_LIST" 3>&1 1>&2 2>&3)
+
+    # 清除对话框
+    clear
 
     # 创建一个临时文件用于存储新的rc.local内容
     TMP_RC_LOCAL=$(mktemp)
@@ -428,14 +442,13 @@ do_autostart_vm() {
     echo "#!/bin/sh -e" >$TMP_RC_LOCAL
     echo "sleep 5" >>$TMP_RC_LOCAL
 
-    # 为每个普通用户创建的虚拟机添加启动命令
-    for VMNAME in "${USER_VM_ARRAY[@]}"; do
-        echo "su - $USERNAME -c \"VBoxHeadless -s $VMNAME &\"" >>$TMP_RC_LOCAL
-    done
-
-    # 为每个root用户创建的虚拟机添加启动命令
-    for VMNAME in "${ROOT_VM_ARRAY[@]}"; do
-        echo "sudo VBoxHeadless -s $VMNAME &" >>$TMP_RC_LOCAL
+    # 为用户选择的每个虚拟机添加启动命令
+    for VMNAME in $SELECTED_VMS; do
+        if [[ " ${USER_VM_ARRAY[@]} " =~ " ${VMNAME} " ]]; then
+            echo "su - $USERNAME -c \"VBoxHeadless -s $VMNAME &\"" >>$TMP_RC_LOCAL
+        else
+            echo "sudo VBoxHeadless -s $VMNAME &" >>$TMP_RC_LOCAL
+        fi
     done
 
     # 添加exit 0到临时文件的末尾
@@ -446,30 +459,12 @@ do_autostart_vm() {
 
     # 删除临时文件
     rm $TMP_RC_LOCAL
-
-    # 创建一个临时文件用于存储虚拟机列表
-    TMP_VM_LIST=$(mktemp)
-
-    # 将虚拟机名称写入临时文件
-    for VMNAME in "${VM_ARRAY[@]}"; do
-        echo "$VMNAME" >>"$TMP_VM_LIST"
-    done
-
-    # 使用 dialog 显示虚拟机列表，并将按钮标记为“确定”
-    dialog --title "下列虚拟机均已设置为开机自启动" --ok-label "确定" --textbox "$TMP_VM_LIST" 10 50
-
-    # 清除对话框
-    clear
-
-    # 删除临时文件
     rm "$TMP_VM_LIST"
 
     # 显示/etc/rc.local的内容
-    Show 0 "已将所有虚拟机设置为开机后台自启动。查看配置 /etc/rc.local,如下"
+    Show 0 "已更新/etc/rc.local文件。您可以查看配置，以确认自启动虚拟机设置。"
     cat /etc/rc.local
 }
-
-
 
 # 安装btop
 enable_btop() {
@@ -535,7 +530,6 @@ check_zenity_installed() {
         #echo "Zenity is already installed."
     fi
 }
-
 
 #硬盘直通(需root身份启动vm)
 attach_raw_disk_to_vm() {
@@ -636,14 +630,12 @@ refresh_vm_disk_uuid() {
     fi
 
     # 使用 VBoxManage 命令刷新 UUID
-    if  VBoxManage internalcommands sethduuid "$disk_path" >/dev/null 2>&1; then
+    if VBoxManage internalcommands sethduuid "$disk_path" >/dev/null 2>&1; then
         zenity --info --text="恭喜你!虚拟硬盘UUID刷新成功了\n文件位于:$disk_path" --width=400 --height=200 2>/dev/null
     else
         zenity --error --text="Failed to refresh UUID for disk: $disk_path" --width=400 --height=200 2>/dev/null
     fi
 }
-
-
 
 show_menu() {
     clear
