@@ -199,7 +199,7 @@ prepare_for_casaos() {
     sudo cp /etc/os-release /etc/os-release.backup
     # 显示带有红色文本的提示信息
     echo -e
-    echo -e "安装CasaOS过程会自动安装docker,为了避免docker版本冲突,\n需要${GREEN}卸载本机安装过的docker,${NC}${RED}确定要卸载docker吗。是否继续?${NC} [Y/n] "
+    echo -e "安装CasaOS过程会自动安装docker,为了避免docker版本冲突,\n需要${GREEN}卸载本机安装过的docker(若存在),${NC}${RED}确定要卸载docker吗。是否继续?${NC} [Y/n] "
     read -r -n 1 response
     echo
     case $response in
@@ -227,9 +227,9 @@ prepare_for_casaos() {
 
 #卸载docker
 uninstall_docker() {
-    sudo dpkg --configure -a
+    if dpkg -l | grep -qw docker-ce; then
     sudo apt-get purge docker-ce docker-ce-cli containerd.io
-    sudo apt autoremove
+    fi
 }
 
 # 安装CasaOS—Docker
