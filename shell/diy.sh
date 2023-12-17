@@ -66,14 +66,6 @@ GreyStart() {
 ColorReset() {
     echo -e "$COLOUR_RESET\c"
 }
-
-InitBanner() {
-    echo -e "${GREEN_LINE}"
-    echo -e " https://github.com/wukongdaily/diy-nas-onescript"
-    echo -e "${GREEN_LINE}"
-    echo -e ""
-}
-
 # 定义红色文本
 RED='\033[0;31m'
 # 无颜色
@@ -658,21 +650,24 @@ show_menu() {
 
     echo -e "${GREEN_LINE}"
     echo '
-    ***********  DIY NAS 工具箱v1.1  ***************
+    ***********  DIY NAS 工具箱v1.2  ***************
     适配系统:deepin 20.9/v23 beta2(基于debian)
     脚本作用:快速部署一个办公场景下的Diy NAS
     
             --- Made by wukong with YOU ---
     '
+    echo -e " https://github.com/wukongdaily/diy-nas-onescript"
     echo -e "${GREEN_LINE}"
     echo "请选择操作："
 
+    # 特殊处理的项数组
+    special_items=("设置虚拟机开机自启动(headless)" "VirtualBox硬盘直通" "创建root身份的VirtualBox图标" "刷新虚拟硬盘的UUID")
     for i in "${!menu_options[@]}"; do
-        if [[ "${menu_options[i]}" == "设置虚拟机开机自启动(headless)" ]]; then
-            echo -e "$((i + 1)). ${YELLOW}${menu_options[i]}${NO_COLOR}"
-        elif [[ "${menu_options[i]}" == "VirtualBox硬盘直通" ]]; then
-            echo -e "$((i + 1)). ${aCOLOUR[0]}${menu_options[i]}${NO_COLOR}"
+        if [[ " ${special_items[*]} " =~ " ${menu_options[i]} " ]]; then
+            # 如果当前项在特殊处理项数组中，使用特殊颜色
+            echo -e "$((i + 1)). ${aCOLOUR[7]}${menu_options[i]}${NO_COLOR}"
         else
+            # 否则，使用普通格式
             echo "$((i + 1)). ${menu_options[i]}"
         fi
     done
