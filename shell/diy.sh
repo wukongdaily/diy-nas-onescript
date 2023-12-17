@@ -290,7 +290,7 @@ prepare_for_casaos() {
 #卸载docker
 uninstall_docker() {
     if dpkg -l | grep -qw docker-ce; then
-    sudo apt-get purge docker-ce docker-ce-cli containerd.io
+        sudo apt-get purge docker-ce docker-ce-cli containerd.io
     fi
 }
 
@@ -420,17 +420,31 @@ do_autostart_vm() {
     # 创建一个临时文件用于存储虚拟机列表
     TMP_VM_LIST=$(mktemp)
 
+    # 先解析 /etc/rc.local 来找出已设置为自启动的虚拟机
+    AUTO_START_VMS=()
+    while IFS= read -r line; do
+        if [[ $line =~ VBoxHeadless\ -s\ (.+) ]]; then
+            AUTO_START_VMS+=("${BASH_REMATCH[1]}")
+        fi
+    done </etc/rc.local
+
     # 生成dialog checklist所需的格式
     for VMNAME in "${VM_ARRAY[@]}"; do
-        if [[ " ${USER_VM_ARRAY[@]} " =~ " ${VMNAME} " ]]; then
-            echo "$VMNAME byUser off" >>"$TMP_VM_LIST"
+        if [[ " ${AUTO_START_VMS[@]} " =~ " ${VMNAME} " ]]; then
+            STATE="on"
         else
-            echo "$VMNAME byRoot off" >>"$TMP_VM_LIST"
+            STATE="off"
+        fi
+
+        if [[ " ${USER_VM_ARRAY[@]} " =~ " ${VMNAME} " ]]; then
+            echo "$VMNAME byUser $STATE" >>"$TMP_VM_LIST"
+        else
+            echo "$VMNAME byRoot $STATE" >>"$TMP_VM_LIST"
         fi
     done
 
     # 使用dialog让用户选择要自启动的虚拟机
-    SELECTED_VMS=$(dialog --checklist "按空格键选择要自启动的虚拟机：" 20 50 10 --file "$TMP_VM_LIST" 3>&1 1>&2 2>&3)
+    SELECTED_VMS=$(dialog --checklist "按 [空格键Space] 选择要自启动的虚拟机(/etc/rc.local)" 20 70 15 --file "$TMP_VM_LIST" 3>&1 1>&2 2>&3)
 
     # 清除对话框
     clear
