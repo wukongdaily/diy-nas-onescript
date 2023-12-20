@@ -467,6 +467,8 @@ do_autostart_vm() {
     rm $TMP_RC_LOCAL
     rm "$TMP_VM_LIST"
 
+    setautologin
+
     # 显示/etc/rc.local的内容
     Show 0 "已更新/etc/rc.local文件。您可以查看配置，以确认自启动虚拟机设置。"
     cat /etc/rc.local
