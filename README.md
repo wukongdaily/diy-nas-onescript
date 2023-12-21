@@ -20,5 +20,5 @@ https://www.deepin.org/zh/deepin-v23-beta2-released/
 
 
 
-![FinalShell 4 3 0 6 2023-12-11 09-39-21](https://github.com/wukongdaily/diy-nas-onescript/assets/143675923/be5bc400-9f0b-4062-a60f-4551512b63d8)
+![image](https://github.com/wukongdaily/diy-nas-onescript/assets/143675923/3e132260-ff1a-4bc7-9b53-16cf7c466fae)
 
