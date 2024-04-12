@@ -22,3 +22,7 @@ https://www.deepin.org/zh/deepin-v23-beta2-released/
 
 ![image](https://github.com/wukongdaily/diy-nas-onescript/assets/143675923/3e132260-ff1a-4bc7-9b53-16cf7c466fae)
 
+# 💰打赏作者💰
+<img src="https://github.com/wukongdaily/tvhelper-docker/assets/143675923/1f92c5ba-1b6b-4967-a1ab-20697159badc" width="30%" />
+
+
