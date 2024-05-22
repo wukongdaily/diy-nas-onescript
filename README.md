@@ -5,6 +5,15 @@
 这是一个适用于在deepin v23beta2 系统上部署nas常用软件的脚本。它可以帮助用户快速安装想要的软件环境和docker应用。
 
 ## ❤[使用方法 Wiki](https://github.com/wukongdaily/diy-nas-onescript/wiki)
+# 在终端执行下列命令即可
+
+
+```
+curl -fsSL https://cafe.cpolar.cn/wkdaily/diy-nas-onescript/raw/branch/master/shell/diy.sh -o diy.sh && chmod +x diy.sh && ./diy.sh
+
+```
+
+## 执行效果截图
 
 ## ‼️[提BUG](https://github.com/wukongdaily/diy-nas-onescript/issues)
 ## 适配系统
