@@ -91,6 +91,7 @@ menu_options=(
     "还原配置文件os-release"
     "配置docker为国内镜像"
     "安装btop资源监控工具"
+    "安装1panel面板(推荐)"
     "卸载虚拟机"
     "卸载 CasaOS"
 )
@@ -113,6 +114,9 @@ commands=(
     ["VirtualBox硬盘直通"]="attach_raw_disk_to_vm"
     ["创建root身份的VirtualBox图标"]="create_root_vm_desktop"
     ["刷新虚拟硬盘的UUID"]="refresh_vm_disk_uuid"
+    ["安装1panel面板(推荐)"]="install_1panel"
+
+    
 
 )
 
