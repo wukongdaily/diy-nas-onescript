@@ -8,7 +8,7 @@
 
 
 ```
-curl -fsSL https://cafe.cpolar.cn/wkdaily/diy-nas-onescript/raw/branch/master/shell/diy.sh -o diy.sh && chmod +x diy.sh && ./diy.sh
+curl -fsSL https://cafe.cpolar.top/wkdaily/diy-nas-onescript/raw/branch/master/shell/diy.sh -o diy.sh && chmod +x diy.sh && ./diy.sh
 
 ```
 # 参考视频 点击封面直达
